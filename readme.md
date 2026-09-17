@@ -32,8 +32,8 @@ Desarrollado como proyecto incremental para los módulos 6, 7 y 8 de formación 
 1. **Clonar el repositorio:**
 
 ```bash
-git clone https://github.com/TU_USUARIO/node-express-web-app.git
-cd node-express-web-app
+git clone https://github.com/leandrofuenzalida/user-hub-node-express-api-web.git
+cd user-hub-node-express-api-web
 Instalar dependencias:
 npm install
 Configurar variables de entorno:
@@ -42,21 +42,21 @@ Crear archivo .env basado en .env.example:
 cp .env.example .env
 Editar .env con tus credenciales:
 
-PORT=3000
+PORT=4000
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=nombre_base_datos
-DB_USER=usuario_postgres
-DB_PASSWORD=contraseña
-JWT_SECRET=tu_clave_secreta_jwt
+DB_NAME=node_express_app
+DB_USER=postgres
+DB_PASSWORD=tu_contraseña
+JWT_SECRET=tu_clave_secreta_jwt_super_segura
 Crear base de datos:
-psql -U postgres -d tu_base_datos -f ./sql/schema.sql
+psql -U postgres -d node_express_app -f ./sql/schema.sql
 🏃 Ejecución
 Modo desarrollo (con auto-reload):
 npm run dev
 Modo producción:
 npm start
-El servidor estará disponible en http://localhost:3000
+El servidor estará disponible en http://localhost:4000
 
 📁 Estructura del Proyecto
 node-express-web-app/
@@ -149,50 +149,113 @@ Subida de Archivos (API v1)
 Método	Ruta	Descripción
 POST	/api/v1/upload	Subir archivo (protegido)
 DELETE	/api/v1/upload/:nombre	Eliminar archivo (protegido)
-📝 Ejemplos de Uso
+🔐 Autenticación con JWT
+La aplicación usa JSON Web Tokens (JWT) para proteger rutas y operaciones sensibles.
+
+Flujo de autenticación
+Registro: Crear una nueva cuenta
+Login: Obtener un token JWT válido
+Usar token: Incluir el token en peticiones protegidas
+Acceso: El servidor valida el token y permite/deniega acceso
 Registro de usuario
-curl -X POST http://localhost:3000/api/v1/auth/registro \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nombre": "Juan Pérez",
-    "email": "juan@example.com",
-    "password": "password123"
-  }'
+POST http://localhost:4000/api/v1/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "Juan Pérez",
+  "email": "juan@gmail.com",
+  "password": "password123"
+}
 Respuesta exitosa:
 
 {
   "status": "ok",
-  "message": "Usuario registrado exitosamente",
+  "message": "Usuario registrado correctamente.",
   "data": {
     "id": 1,
     "nombre": "Juan Pérez",
-    "email": "juan@example.com",
-    "token": "eyJhbGciOiJIUzI1NiIs..."
+    "email": "juan@gmail.com",
+    "activo": true
   }
 }
-Login
-curl -X POST http://localhost:3000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "juan@example.com",
-    "password": "password123"
-  }'
-Respuesta:
+Login y obtener token
+POST http://localhost:4000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "juan@gmail.com",
+  "password": "password123"
+}
+Respuesta exitosa:
 
 {
   "status": "ok",
   "message": "Login exitoso",
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJpYXQiOjE2OTA1MzIxNjgsImV4cCI6MTY5MDUzNTc2OCwic3ViIjoiMSJ9.abcd1234...",
     "usuario": {
       "id": 1,
       "nombre": "Juan Pérez",
-      "email": "juan@example.com"
+      "email": "juan@gmail.com"
     }
   }
 }
+Usar el token en peticiones protegidas
+Todas las peticiones a rutas protegidas deben incluir el header Authorization con el token:
+
+GET http://localhost:4000/api/v1/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJpYXQiOjE2OTA1MzIxNjgsImV4cCI6MTY5MDUzNTc2OCwic3ViIjoiMSJ9.abcd1234...
+En Postman
+Ve a la pestaña Headers
+Agrega una nueva fila:
+Key: Authorization
+Value: Bearer [TU_TOKEN_DEL_LOGIN]
+Envía la petición
+Manejo de errores de autenticación
+Sin token (Error 401):
+
+{
+  "status": "error",
+  "message": "No autorizado",
+  "data": null
+}
+Token expirado (Error 401):
+
+{
+  "status": "error",
+  "message": "Token expirado",
+  "data": null
+}
+Token inválido (Error 401):
+
+{
+  "status": "error",
+  "message": "Token inválido",
+  "data": null
+}
+Características de los tokens JWT
+Duración: 1 hora desde la emisión
+Contenido: ID del usuario, email, timestamp
+Firma: Imposibles de falsificar
+Validación: Se verifica en cada petición protegida
+📝 Ejemplos de Uso
+Registro de usuario
+curl -X POST http://localhost:4000/api/v1/auth/registro \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Juan Pérez",
+    "email": "juan@gmail.com",
+    "password": "password123"
+  }'
+Login
+curl -X POST http://localhost:4000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "juan@gmail.com",
+    "password": "password123"
+  }'
 Listar usuarios (con autenticación)
-curl -X GET http://localhost:3000/api/v1/usuarios \
+curl -X GET http://localhost:4000/api/v1/usuarios \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 Respuesta:
 
@@ -203,7 +266,7 @@ Respuesta:
     {
       "id": 1,
       "nombre": "Juan Pérez",
-      "email": "juan@example.com",
+      "email": "juan@gmail.com",
       "links": {
         "self": "/api/v1/usuarios/1",
         "pedidos": "/api/v1/usuarios/1/pedidos"
@@ -211,32 +274,33 @@ Respuesta:
     }
   ]
 }
-Crear usuario
-curl -X POST http://localhost:3000/api/v1/usuarios \
+Crear usuario (protegido)
+curl -X POST http://localhost:4000/api/v1/usuarios \
   -H "Authorization: Bearer TU_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "nombre": "María García",
-    "email": "maria@example.com",
+    "email": "maria@gmail.com",
     "password": "securePass123"
   }'
-Subir archivo
-curl -X POST http://localhost:3000/api/v1/upload \
+Subir archivo (protegido)
+curl -X POST http://localhost:4000/api/v1/upload \
   -H "Authorization: Bearer TU_TOKEN" \
   -F "archivo=@/ruta/a/imagen.jpg"
-🔐 Autenticación
-La aplicación usa JWT (JSON Web Tokens) para proteger rutas:
+Respuesta exitosa:
 
-El usuario se registra o inicia sesión en /api/v1/auth/registro o /api/v1/auth/login
-Recibe un token JWT en la respuesta
-Incluye el token en el header Authorization: Bearer <token> para acceder a rutas protegidas
-El middleware protegerRuta valida el token en cada petición
-Tokens JWT incluyen:
-
-ID del usuario
-Email
-Timestamp de expiración
-Firma digital
+{
+  "status": "ok",
+  "message": "Archivo subido correctamente",
+  "data": {
+    "filename": "1694532168_imagen.jpg",
+    "path": "/uploads/1694532168_imagen.jpg",
+    "size": 45230
+  }
+}
+Obtener usuario con sus pedidos (relación)
+curl -X GET http://localhost:4000/api/v1/usuarios/1/pedidos \
+  -H "Authorization: Bearer TU_TOKEN"
 📦 Dependencias Principales
 {
   "dependencies": {
@@ -431,18 +495,20 @@ ISC License - Libre para uso comercial y personal
 📞 Contacto
 Autor: Leandro Fuenzalida
 Email: leandro.fuenzalida@gmail.com
-GitHub: https://github.com/TU_USUARIO
+GitHub: https://github.com/leandrofuenzalida
 
 📅 Changelog
 v1.0.0 - Septiembre 2026
 Implementado:
 
 Estructura base con Express
-Autenticación JWT
-API RESTful v1
-PostgreSQL con Sequelize
-Subida de archivos
-Vistas con Handlebars
-Logging de accesos
+Autenticación JWT completa
+API RESTful v1 funcional
+PostgreSQL con Sequelize ORM
+Subida de archivos con validación
+Vistas dinámicas con Handlebars
+Logging de accesos en archivos
 Documentación completa
+Relaciones entre modelos (1:1, 1:N, N:M)
+Manejo robusto de errores
 ```
