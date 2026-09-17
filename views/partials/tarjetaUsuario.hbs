@@ -1,0 +1,26 @@
+<article class="usuario">
+    <p class="numero">Usuario {{sumarUno @index}}</p>
+
+    <h2>{{nombre}}</h2>
+
+    <p>{{ocultarCorreo usuario.correo}}</p>
+
+    {{#if activo}}
+    <span class="estado estado-activo">Activo</span>
+    {{else}}
+    <span class="estado estado-inactivo">Inactivo</span>
+    {{/if}}
+
+    <p>
+        <a href="/usuarios/{{id}}">Ver detalle</a>
+
+    </p>
+    <a href="/usuarios/{{id}}/editar">
+        Editar
+    </a>
+    <form method="POST" action="/usuarios/{{id}}/eliminar">
+        <button class="deleteButton" type="submit">
+            Eliminar Usuario
+        </button>
+    </form>
+</article>

@@ -1,0 +1,38 @@
+{{> header}}
+
+<main class="contenedor">
+    <p>
+        <a href="/usuarios">← Volver a usuarios</a>
+    </p>
+
+    <article class="detalle-usuario">
+        <h1>{{usuario.nombre}}</h1>
+
+        <dl>
+            <div>
+                <dt>ID</dt>
+                <dd>{{usuario.id}}</dd>
+            </div>
+
+            <div>
+                <dt>Correo</dt>
+                <dd>{{ocultarCorreo usuario.correo}}</dd>
+            </div>
+
+            <div>
+                <dt>Estado</dt>
+                <dd>{{formatearEstado usuario.activo}}</dd>
+            </div>
+        </dl>
+        <p><a href="/usuarios/{{usuario.id}}/editar">
+                Editar
+            </a></p>
+        <form method="POST" action="/usuarios/{{usuario.id}}/eliminar">
+            <button class="deleteButton" type="submit">
+                Eliminar Usuario
+            </button>
+        </form>
+    </article>
+</main>
+
+{{> footer}}
